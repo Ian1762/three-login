@@ -1,9 +1,10 @@
 <script setup>
-import { onMounted } from "vue";
+import { h, onMounted } from "vue";
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // 容器 场景
-let container, scene, width, height, depth;
+let container, scene, width, height, depth, camera, renderer, controls;
 // 加载图片
 const IMAGE_SKY = new URL("../../assets/images/sky.jpg", import.meta.url).href;
 
@@ -12,9 +13,14 @@ onMounted(() => {
   width = container.clientWidth;
   height = container.clientHeight;
   depth = 1400;
+  console.log("size", width, height, depth);
   console.log(container);
   initScene();
+  initSceneBackground();
   initCamera();
+  initRender();
+  initOrbitControls();
+  animate();
 });
 
 // 初始化场景
@@ -22,39 +28,68 @@ const initScene = () => {
   scene = new THREE.Scene();
   // 添加雾的效果
   scene.fog = new THREE.Fog(0x000000, 10, 10000);
+  // const axesHelper = new THREE.AxesHelper(10000);
+  // scene.add(axesHelper);
 };
 
 // 添加背景
 const initSceneBackground = () => {
-  new THREE.TextureLoader().load("IMAGE_SKY", (texture) => {});
-  // 创建立方体
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  // 材质
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    side: THREE.BackSide,
+  console.log("IMAGE_SKY", IMAGE_SKY);
+  new THREE.TextureLoader().load(IMAGE_SKY, (texture) => {
+    console.log("texture", texture);
+    // 创建立方体
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    // 材质
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.BackSide,
+    });
+    // 网格
+    const mesh = new THREE.Mesh(geometry, material);
+    // 添加到场景中
+    scene.add(mesh);
   });
-  // 网格
-  const mesh = new THREE.Mesh(geometry, material);
-  // 添加到场景中
-  scene.add(mesh);
 };
 
+// 初始化相机
 const initCamera = () => {
-  const fov = 15;
-  const distance = width / 2 / Math.tan(Math.PI / 12);
+  // 摄像机视锥体垂直视野角度
+  const fov = 30;
+  const radian = 180 / (fov / 2);
+  // 相机距离立方体的距离
+  const distance = width / 2 / Math.tan(Math.PI / radian);
+  // 相机在z轴上的距离
   const zAxisNumber = Math.floor(distance - depth / 2);
-  const camera = new THREE.PerspectiveCamera(fov, width / height, 1, 30000);
+  camera = new THREE.PerspectiveCamera(fov, width / height, 1, 30000);
+  console.log("zAxisNumber", zAxisNumber);
+  // 设置相机位置
   camera.position.set(0, 0, zAxisNumber);
-  camera.lookAt(scene.position);
+  // 看向原点
+  camera.lookAt(0, 0, 0);
   scene.add(camera);
 };
 
-// 添加光源
-const initLight = () => {
-  const light = new THREE.PointLight(0xffffff, 1);
-  light.position.set(0, 0, 0);
-  scene.add(light);
+// 初始化渲染器
+const initRender = () => {
+  renderer = new THREE.WebGLRenderer();
+  //  定义渲染器尺寸
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+};
+
+// 添加轨道控制器
+const initOrbitControls = () => {
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.update();
+};
+
+// 持续动画
+const animate = () => {
+  requestAnimationFrame(animate);
+
+  controls.update();
+
+  renderer.render(scene, camera);
 };
 </script>
 
