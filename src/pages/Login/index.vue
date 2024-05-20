@@ -3,20 +3,34 @@ import { h, onMounted } from "vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-// 容器 场景
+// 容器
 let container,
+  // 场景
   scene,
+  // 容器宽
   width,
+  // 容器高
   height,
+  // 容器深度
   depth,
+  // 相机
   camera,
+  // 渲染器
   renderer,
+  // 轨道控制器
   controls,
+  // mesh地球
   earth,
+  // 相机位置
   zAxisNumber,
+  // 星星初始位置
   starsPositionInit,
+  //mesh星星
   meshPoints,
-  parameters;
+  // 星星参数
+  parameters,
+  // 星星进度
+  starProgress;
 // 加载图片
 const IMAGE_SKY = new URL("../../assets/images/sky.png", import.meta.url).href;
 const IMAGE_EARTH = new URL("../../assets/images/earth_bg.png", import.meta.url)
@@ -43,6 +57,7 @@ onMounted(() => {
   initLight();
   initCamera();
   starsPositionInit = -(zAxisNumber + depth / 2);
+  starProgress = starsPositionInit;
   addSceneStar(starsPositionInit);
   initRender();
   initOrbitControls();
@@ -148,9 +163,6 @@ const addSceneStar = (initZposition) => {
 
   // 创建点网格
   meshPoints = new THREE.Points(geometry, materials);
-  // meshPoints.rotation.x = Math.random() * 0.2 - 0.15;
-  // meshPoints.rotation.y = Math.random() * 0.2 - 0.15;
-  // meshPoints.rotation.z = Math.random() * 0.2 - 0.15;
   meshPoints.position.setZ(initZposition);
   console.log("meshPoints", geometry, meshPoints);
 
@@ -170,6 +182,13 @@ const renderStarMoving = () => {
       parseFloat(h.toFixed(2))
     );
     // materials[index].color.setHSL(color[0], color[1], parseFloat(h.toFixed(2)));
+  }
+  // 星星运动
+  starProgress += 1;
+  if (starProgress >= zAxisNumber + depth / 2) {
+    starProgress = starsPositionInit;
+  } else {
+    meshPoints.position.setZ(starProgress);
   }
 };
 
