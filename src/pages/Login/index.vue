@@ -4,9 +4,11 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // 容器 场景
-let container, scene, width, height, depth, camera, renderer, controls;
+let container, scene, width, height, depth, camera, renderer, controls, earth;
 // 加载图片
-const IMAGE_SKY = new URL("../../assets/images/sky.jpg", import.meta.url).href;
+const IMAGE_SKY = new URL("../../assets/images/sky.png", import.meta.url).href;
+const IMAGE_EARTH = new URL("../../assets/images/earth_bg.png", import.meta.url)
+  .href;
 
 onMounted(() => {
   container = document.getElementById("login-three-container");
@@ -17,6 +19,8 @@ onMounted(() => {
   console.log(container);
   initScene();
   initSceneBackground();
+  addEarth();
+  initLight();
   initCamera();
   initRender();
   initOrbitControls();
@@ -49,6 +53,38 @@ const initSceneBackground = () => {
     // 添加到场景中
     scene.add(mesh);
   });
+};
+
+// 添加地球
+const addEarth = () => {
+  console.log("IMAGE_EARTH", IMAGE_EARTH);
+  new THREE.TextureLoader().load(IMAGE_EARTH, (texture) => {
+    const geometry = new THREE.SphereGeometry(50, 64, 32);
+    const material = new THREE.MeshPhongMaterial({ map: texture });
+    earth = new THREE.Mesh(geometry, material);
+    earth.position.set(-400, 200, -200);
+    scene.add(earth);
+  });
+};
+
+// 地球自转
+const earthRotate = () => {
+  earth?.rotateY(0.001);
+};
+
+// 光源
+const initLight = () => {
+  // 环境光
+  const ambientLight = new THREE.AmbientLight(0xffffff);
+  scene.add(ambientLight);
+  // 电光源
+  const pointLight = new THREE.PointLight(0x0655fd, 5, 0);
+  pointLight.position.set(0, 100, -200);
+  scene.add(pointLight);
+
+  // const sphereSize = 10;
+  // const pointLightHelper = new THREE.PointLightHelper(pointLight, sphereSize);
+  // scene.add(pointLightHelper);
 };
 
 // 初始化相机
@@ -88,7 +124,7 @@ const animate = () => {
   requestAnimationFrame(animate);
 
   controls.update();
-
+  earthRotate();
   renderer.render(scene, camera);
 };
 </script>
