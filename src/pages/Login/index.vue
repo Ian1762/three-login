@@ -1,5 +1,5 @@
 <script setup>
-import { h, onMounted } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
@@ -89,7 +89,7 @@ onMounted(() => {
     0.0008
   );
   initRender();
-  initOrbitControls();
+  // initOrbitControls();
   animate();
 });
 
@@ -304,22 +304,192 @@ const initOrbitControls = () => {
 const animate = () => {
   requestAnimationFrame(animate);
 
-  controls.update();
+  // controls.update();
   earthRotate();
   renderStarMoving();
   renderCloud1();
   renderCloud2();
   renderer.render(scene, camera);
 };
+
+// 登陆表单验证
+const formSize = ref("default");
+const labelPosition = ref("left");
+const ruleFormRef = ref();
+const ruleForm = reactive({
+  name: "",
+  password: "",
+});
+
+const rules = reactive({
+  name: [
+    { required: true, message: "Please input Activity name", trigger: "blur" },
+    { min: 3, max: 5, message: "Length should be 3 to 5", trigger: "blur" },
+  ],
+  password: [
+    { required: true, message: "Please input password", trigger: "blur" },
+  ],
+});
+
+const submitForm = async (formEl) => {
+  if (!formEl) return;
+  await formEl.validate((valid, fields) => {
+    if (valid) {
+      console.log("submit!");
+    } else {
+      console.log("error submit!", fields);
+    }
+  });
+};
+
+const resetForm = (formEl) => {
+  if (!formEl) return;
+  formEl.resetFields();
+};
 </script>
 
 <template>
-  <div id="login-three-container"></div>
+  <div class="login-container">
+    <div id="login-three-container"></div>
+    <div class="login-ground"></div>
+    <div class="login-plane">
+      <div class="login-plane-container">
+        <h1 class="login-plane-container-title">大数据智能应用系统</h1>
+        <el-form
+          ref="ruleFormRef"
+          style="max-width: 300px"
+          :label-position="labelPosition"
+          :model="ruleForm"
+          :rules="rules"
+          label-width="auto"
+          class="login-plane-container-from"
+          :size="formSize"
+          status-icon
+        >
+          <el-form-item label="用户名" prop="name">
+            <el-input
+              v-model="ruleForm.name"
+              style="width: 240px"
+              placeholder="Please input name"
+              :input-style="{ color: red }"
+            />
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input
+              v-model="ruleForm.password"
+              style="width: 240px"
+              type="password"
+              placeholder="Please input password"
+              autocomplete="off"
+              show-password
+            />
+          </el-form-item>
+          <el-form-item class="login-plane-container-button">
+            <el-button
+              color="#3d4072"
+              :dark="isDark"
+              @click="submitForm(ruleFormRef)"
+            >
+              Create
+            </el-button>
+            <el-button
+              color="#3d4072"
+              :dark="isDark"
+              @click="resetForm(ruleFormRef)"
+              >Reset</el-button
+            >
+          </el-form-item>
+        </el-form>
+      </div>
+      <img
+        src="@/assets/images/login_human.png"
+        alt="宇航员"
+        class="login-plane-human"
+      />
+    </div>
+  </div>
 </template>
 
 <style lang='less' scoped>
-#login-three-container {
-  width: 100%;
-  height: 100vh;
+@keyframes upDownAnimation {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px); /* 上移10像素 */
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.login-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  #login-three-container {
+    width: 100vw;
+    height: 100vh;
+  }
+  .login-ground {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 50%;
+    background-image: url("@/assets/images/ground.png");
+  }
+  .login-plane {
+    // background-color: #794e4e;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 600px;
+    height: 300px;
+    transform: translate(-50%, -50%);
+    background-image: url("@/assets/images/login_border.png");
+    background-size: 100% 100%;
+    .login-plane-container {
+      margin: 30px;
+      // background-color: #fff;
+      &-title {
+        text-align: center;
+        line-height: 70px;
+        color: #fff;
+        letter-spacing: 15px;
+        background-image: url("@/assets/images/login_horizontal_line.png");
+        /* 背景图片的位置，确保它在底部 */
+        background-position: center bottom;
+        /* 背景图片不重复 */
+        background-repeat: no-repeat;
+      }
+      &-from {
+        margin: 30px auto 0;
+      }
+    }
+    &-human {
+      position: absolute;
+      right: -75px;
+      top: -88px;
+      width: 200px;
+      animation: upDownAnimation 5s infinite;
+    }
+  }
+}
+</style>
+<style lang='less'>
+.login-container
+  .login-plane
+  .login-plane-container
+  .login-plane-container-from {
+  .el-form-item .el-form-item__label-wrap .el-form-item__label {
+    color: #fff;
+  }
+  .login-plane-container-button .el-form-item__content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 </style>
