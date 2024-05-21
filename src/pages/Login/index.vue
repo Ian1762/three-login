@@ -30,7 +30,15 @@ let container,
   // 星星参数
   parameters,
   // 星星进度
-  starProgress;
+  starProgress,
+  // mesh云1
+  meshCloud1,
+  // mesh云2
+  meshCloud2,
+  // 云1动画
+  renderCloud1,
+  // 云2动画
+  renderCloud2;
 // 加载图片
 const IMAGE_SKY = new URL("../../assets/images/sky.png", import.meta.url).href;
 const IMAGE_EARTH = new URL("../../assets/images/earth_bg.png", import.meta.url)
@@ -43,6 +51,8 @@ const IMAGE_STAR2 = new URL(
   "../../assets/images/starflake2.png",
   import.meta.url
 ).href;
+const IMAGE_CLOUD = new URL("../../assets/images/cloud.png", import.meta.url)
+  .href;
 
 onMounted(() => {
   container = document.getElementById("login-three-container");
@@ -59,6 +69,25 @@ onMounted(() => {
   starsPositionInit = -(zAxisNumber + depth / 2);
   starProgress = starsPositionInit;
   addSceneStar(starsPositionInit);
+  meshCloud1 = addCloud(400, 200);
+  meshCloud2 = addCloud(200, 100);
+  renderCloud1 = initCloudMoving(
+    meshCloud1,
+    [
+      new THREE.Vector3(-width / 10, 0, -depth / 2),
+      new THREE.Vector3(-width / 4, height / 8, 0),
+      new THREE.Vector3(-width / 4, 0, zAxisNumber),
+    ],
+    0.0002
+  );
+  renderCloud2 = initCloudMoving(
+    meshCloud2,
+    [
+      new THREE.Vector3(width / 8, height / 8, -depth / 2),
+      new THREE.Vector3(width / 8, height / 8, zAxisNumber),
+    ],
+    0.0008
+  );
   initRender();
   initOrbitControls();
   animate();
@@ -192,6 +221,37 @@ const renderStarMoving = () => {
   }
 };
 
+// 添加星云
+const addCloud = (width, height) => {
+  const geometry = new THREE.PlaneGeometry(width, height);
+  const texture = new THREE.TextureLoader().load(IMAGE_CLOUD);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthTest: false,
+  });
+  const cloud = new THREE.Mesh(geometry, material);
+  scene.add(cloud);
+  return cloud;
+};
+
+// 初始化星云运动
+const initCloudMoving = (meshCloud, points, speed) => {
+  let cloudProgress = 0;
+  const curve = new THREE.CatmullRomCurve3(points);
+  return () => {
+    if (cloudProgress <= 1) {
+      cloudProgress += speed;
+      // 获取当前位置
+      const coord = curve.getPoint(cloudProgress);
+      coord?.x && meshCloud.position.set(coord.x, coord.y, coord.z);
+    } else {
+      cloudProgress = 0;
+    }
+  };
+};
+
 // 光源
 const initLight = () => {
   // 环境光
@@ -247,6 +307,8 @@ const animate = () => {
   controls.update();
   earthRotate();
   renderStarMoving();
+  renderCloud1();
+  renderCloud2();
   renderer.render(scene, camera);
 };
 </script>
